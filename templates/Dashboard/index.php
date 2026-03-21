@@ -436,7 +436,7 @@ body {
     </div>
 
     <div style="padding: 1rem; border-top: 1px solid var(--border);">
-      <div class="patient-item">
+      <div class="patient-item" onclick="window.location='/settings'">
   <div class="patient-avatar">⚙</div>
   <div class="patient-info">
     <div class="patient-name">Settings</div>

@@ -64,12 +64,11 @@ class DashboardController extends AppController
     public function sendMessage()
 {
     $this->request->allowMethod(['post']);
-
     $user = $this->request->getAttribute('identity');
     $data = $this->request->getData();
 
     $conversationId = $data['conversation_id'] ?? null;
-    $messageText = $data['message'] ?? '';
+    $messageText    = $data['message'] ?? '';
 
     if (!$messageText) {
         return $this->response
@@ -87,7 +86,6 @@ class DashboardController extends AppController
         $conversationId = $conversation->id;
     }
 
-    // Save user message — using correct column names
     $userMessage = $this->Messages->newEmptyEntity();
     $this->Messages->patchEntity($userMessage, [
         'conversation_id' => $conversationId,
@@ -96,10 +94,16 @@ class DashboardController extends AppController
     ]);
     $this->Messages->save($userMessage);
 
-    // Get AI reply
-    $aiReply = $this->generateAIPrediction($messageText);
+    // Pass user profile to AI
+    $profile = [
+        'age'        => $user->age,
+        'gender'     => $user->gender,
+        'conditions' => $user->conditions,
+        'allergies'  => $user->allergies,
+    ];
 
-    // Save bot message — using correct column names
+    $aiReply = $this->generateAIPrediction($messageText, $profile);
+
     $botMessage = $this->Messages->newEmptyEntity();
     $this->Messages->patchEntity($botMessage, [
         'conversation_id' => $conversationId,
@@ -117,23 +121,32 @@ class DashboardController extends AppController
         ]));
 }
 
- protected function generateAIPrediction($text)
+protected function generateAIPrediction(string $text, array $profile = []): string
 {
     $apiKey = getenv('GROQ_API_KEY');
-    if (!$apiKey) {
-        \Cake\Log\Log::error('GROQ: API key missing');
-        return "GROQ API key is not set.";
+    if (!$apiKey) return "GROQ API key is not set.";
+
+    // Build personalized system prompt
+    $systemPrompt = "You are a helpful healthcare assistant. Answer clearly and politely.";
+
+    if (!empty($profile)) {
+        $systemPrompt .= "\n\nPatient Profile:";
+        if (!empty($profile['age']))        $systemPrompt .= "\n- Age: {$profile['age']}";
+        if (!empty($profile['gender']))     $systemPrompt .= "\n- Gender: {$profile['gender']}";
+        if (!empty($profile['conditions'])) $systemPrompt .= "\n- Known conditions: {$profile['conditions']}";
+        if (!empty($profile['allergies']))  $systemPrompt .= "\n- Allergies: {$profile['allergies']}";
+        $systemPrompt .= "\n\nUse this profile to give personalized responses.";
     }
 
-    $url = "https://api.groq.com/openai/v1/chat/completions";
+    $url  = "https://api.groq.com/openai/v1/chat/completions";
     $data = [
-        "model" => "llama-3.1-8b-instant",
+        "model"    => "llama-3.1-8b-instant",
         "messages" => [
-            ["role" => "system", "content" => "You are a helpful healthcare assistant."],
-            ["role" => "user", "content" => $text]
+            ["role" => "system", "content" => $systemPrompt],
+            ["role" => "user",   "content" => $text]
         ],
         "temperature" => 0.7,
-        "max_tokens" => 300
+        "max_tokens"  => 300
     ];
 
     $ch = curl_init($url);
@@ -144,34 +157,22 @@ class DashboardController extends AppController
     ]);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-
     $response = curl_exec($ch);
 
     if (curl_errno($ch)) {
-        \Cake\Log\Log::error('GROQ CURL ERROR: ' . curl_error($ch));
+        $error = curl_error($ch);
         curl_close($ch);
-        return "Error communicating with AI service.";
+        return "Error communicating with AI service: " . $error;
     }
 
     curl_close($ch);
-
-    \Cake\Log\Log::debug('GROQ RAW RESPONSE: ' . $response);
-
     $result = json_decode($response, true);
 
     if (isset($result['error'])) {
-        \Cake\Log\Log::error('GROQ API ERROR: ' . json_encode($result['error']));
         return "AI error: " . $result['error']['message'];
     }
 
-    $reply = $result['choices'][0]['message']['content'] ?? null;
-
-    if (!$reply) {
-        \Cake\Log\Log::error('GROQ: No reply in response: ' . json_encode($result));
-        return "Sorry, I couldn't generate a response.";
-    }
-
-    return trim($reply);
+    return trim($result['choices'][0]['message']['content'] ?? "Sorry, I couldn't generate a response.");
 }
 
     public function deleteConversation($id)
