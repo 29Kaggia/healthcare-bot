@@ -48,6 +48,7 @@ return function (RouteBuilder $routes): void {
      * `{action}` markers.
      */
     $routes->setRouteClass(DashedRoute::class);
+    $routes->connect('/logout', ['controller' => 'Users', 'action' => 'logout']);
 
     $routes->scope('/', function (RouteBuilder $builder): void {
         /*

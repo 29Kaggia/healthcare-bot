@@ -440,10 +440,14 @@ body {
         <div class="patient-avatar">⚙</div>
         <div class="patient-info"><div class="patient-name">Settings</div></div>
       </div>
-      <div class="patient-item" onclick="window.location='/logout'">
-        <div class="patient-avatar">⎋</div>
-        <div class="patient-info"><div class="patient-name">Logout</div></div>
-      </div>
+      <div class="patient-item">
+  <div class="patient-item" onclick="window.location='<?= $this->Url->build(['controller' => 'Users', 'action' => 'logout']) ?>'">
+  <div class="patient-avatar">⎋</div>
+  <div class="patient-info">
+    <div class="patient-name">Logout</div>
+  </div>
+</div>
+</div>
     </div>
   </div>
 

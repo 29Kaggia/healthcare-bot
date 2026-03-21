@@ -45,95 +45,176 @@ function showLogin() {
 </script>
 
 <style>
-*, *::before, *::after {
-  box-sizing: border-box;
-}
+    <div class="auth-box">
+  <div class="auth-header">
+    <div class="auth-cross"></div>
+    <div>
+      <h2>MediChat Portal</h2>
+      <div class="auth-header-sub">Clinical Decision Support System</div>
+    </div>
+  </div>
+  <div class="auth-body">
+    <h2>Create your account</h2>
+    <!-- your existing register form here -->
+    <div class="auth-disclaimer">Authorized personnel only — all sessions are monitored</div>
+  </div>
+</div>
+*, *::before, *::after { box-sizing: border-box; }
 
 :root {
-  --bg: #0f1117;
-  --surface: #181c27;
-  --border: rgba(255,255,255,0.07);
-  --accent: #4fffb0;
-  --text: #e8eaf0;
-  --text-muted: #6b7280;
+  --bg: #f0f4f8;
+  --surface: #ffffff;
+  --border: #d1dce8;
+  --accent: #1565c0;
+  --accent-hover: #1976d2;
+  --accent-light: #e3f0fa;
+  --header-bg: #0a3d6b;
+  --text: #1a2a3a;
+  --text-muted: #607d8b;
+  --text-dim: #90a4ae;
+  --shadow: 0 4px 24px rgba(10,61,107,0.10);
 }
 
 body {
   margin: 0;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   background: var(--bg);
   color: var(--text);
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
+  background-image:
+    radial-gradient(ellipse 60% 40% at 80% 10%, rgba(21,101,192,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 30% at 10% 80%, rgba(21,101,192,0.04) 0%, transparent 50%);
 }
 
 .auth-box {
-  width: 380px;
+  width: 400px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 2rem;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
 }
 
-h2 {
-  font-family: 'DM Serif Display', serif;
-  text-align: center;
-  margin: 0 0 1.5rem;
-  font-size: 1.8rem;
+/* Header banner */
+.auth-header {
+  background: var(--header-bg);
+  padding: 1.5rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.auth-cross {
+  width: 24px;
+  height: 24px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.auth-cross::before,
+.auth-cross::after {
+  content: '';
+  position: absolute;
+  background: #4fc3f7;
+  border-radius: 2px;
+}
+
+.auth-cross::before { width: 7px; height: 17px; left: 8.5px; top: 3.5px; }
+.auth-cross::after  { width: 17px; height: 7px; left: 3.5px; top: 8.5px; }
+
+.auth-header h2 {
+  color: #ffffff;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+.auth-header-sub {
+  color: #90caf9;
+  font-size: 0.72rem;
+  margin-top: 1px;
+  letter-spacing: 0.03em;
+}
+
+/* Form body */
+.auth-body {
+  padding: 1.75rem 2rem 2rem;
+}
+
+.auth-body h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 1.25rem;
+  text-align: left;
 }
 
 .input {
   margin-bottom: 1rem;
 }
 
+.input label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.35rem;
+}
+
 .input input {
   width: 100%;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: transparent;
+  padding: 0.65rem 0.875rem;
+  border-radius: 7px;
+  border: 1.5px solid var(--border);
+  background: #f8fafc;
   color: var(--text);
-  font-family: 'DM Sans', sans-serif;
-  font-size: 0.95rem;
-  transition: border-color 0.2s;
+  font-family: inherit;
+  font-size: 0.875rem;
+  transition: border-color 0.2s, background 0.2s;
 }
 
 .input input:focus {
   outline: none;
   border-color: var(--accent);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(21,101,192,0.08);
 }
 
-.input label {
-  display: none;
-}
+.input input::placeholder { color: var(--text-dim); }
 
 .submit input[type="submit"],
 button[type="submit"] {
   width: 100%;
-  padding: 0.75rem;
+  padding: 0.7rem;
   background: var(--accent);
-  color: #0f1117;
+  color: #ffffff;
   border: none;
-  border-radius: 8px;
+  border-radius: 7px;
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 0.9rem;
   cursor: pointer;
-  font-family: 'DM Sans', sans-serif;
-  transition: opacity 0.2s;
+  font-family: inherit;
+  letter-spacing: 0.02em;
+  transition: background 0.2s, transform 0.1s;
+  margin-top: 0.25rem;
 }
 
 .submit input[type="submit"]:hover,
-button[type="submit"]:hover {
-  opacity: 0.85;
-}
+button[type="submit"]:hover { background: var(--accent-hover); }
+
+.submit input[type="submit"]:active,
+button[type="submit"]:active { transform: scale(0.98); }
 
 .switch {
   text-align: center;
   margin-top: 1rem;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: var(--text-muted);
   cursor: pointer;
   user-select: none;
@@ -141,24 +222,44 @@ button[type="submit"]:hover {
 
 .switch span {
   color: var(--accent);
-  font-weight: 500;
+  font-weight: 600;
 }
 
-.form-section {
-  display: none;
-}
+.switch span:hover { text-decoration: underline; }
 
-.form-section.active {
-  display: block;
-}
+.form-section { display: none; }
+.form-section.active { display: block; }
 
+/* Flash messages */
 .message.error {
-  background: rgba(255, 80, 80, 0.1);
-  border: 1px solid rgba(255, 80, 80, 0.3);
-  border-radius: 8px;
-  padding: 0.6rem 1rem;
+  background: #fff5f5;
+  border: 1px solid #ffcdd2;
+  border-left: 3px solid #e53935;
+  border-radius: 7px;
+  padding: 0.6rem 0.875rem;
   margin-bottom: 1rem;
-  font-size: 0.85rem;
-  color: #ff6b6b;
+  font-size: 0.82rem;
+  color: #c62828;
+}
+
+.message.success {
+  background: #f1f8e9;
+  border: 1px solid #c5e1a5;
+  border-left: 3px solid #43a047;
+  border-radius: 7px;
+  padding: 0.6rem 0.875rem;
+  margin-bottom: 1rem;
+  font-size: 0.82rem;
+  color: #2e7d32;
+}
+
+/* Disclaimer */
+.auth-disclaimer {
+  text-align: center;
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
 }
 </style>
