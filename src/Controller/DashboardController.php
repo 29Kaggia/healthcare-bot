@@ -33,73 +33,89 @@ class DashboardController extends AppController
         $this->set(compact('conversations'));
     }
 
-    public function getMessages($conversationId)
-    {
-        $this->request->allowMethod(['get']);
-        $this->viewBuilder()->setClassName('Json');
+   public function getMessages($conversationId)
+{
+    $this->request->allowMethod(['get']);
 
-        $messages = $this->Messages
-            ->find()
-            ->where(['conversation_id' => $conversationId])
-            ->order(['created' => 'ASC'])
-            ->all();
+    $messages = $this->Messages
+    ->find()
+    ->where(['conversation_id' => $conversationId])
+    ->order(['created' => 'ASC'])
+    ->all()
+    ->toArray();
 
-        $this->set([
-            'success' => true,
-            'messages' => $messages,
-            '_serialize' => ['success', 'messages']
-        ]);
-    }
+    $formatted = array_map(function($msg) {
+    return [
+        'id'      => $msg->id,
+        'role'    => $msg->sender,   // sender not role
+        'content' => $msg->message,  // message not content
+        'created' => $msg->created ? $msg->created->toDateTimeString() : null
+    ];
+}, $messages);
+
+    return $this->response
+        ->withType('application/json')
+        ->withStringBody(json_encode([
+            'success'  => true,
+            'messages' => $formatted
+        ]));
+}
 
     public function sendMessage()
- 
-    {
-    
-        $this->request->allowMethod(['post']);
-        $this->viewBuilder()->setClassName('Json');
+{
+    $this->request->allowMethod(['post']);
 
-        $user = $this->request->getAttribute('identity');
-        $data = $this->request->getData();
+    $user = $this->request->getAttribute('identity');
+    $data = $this->request->getData();
 
-        $conversationId = $data['conversation_id'] ?? null;
-        $messageText = $data['message'];
+    $conversationId = $data['conversation_id'] ?? null;
+    $messageText = $data['message'] ?? '';
 
-        if (!$conversationId) {
-            $conversation = $this->Conversations->newEmptyEntity();
-            $conversation = $this->Conversations->patchEntity($conversation, [
-                'user_id' => $user->id,
-                'title' => substr($messageText, 0, 30)
-            ]);
-            $this->Conversations->save($conversation);
-            $conversationId = $conversation->id;
-        }
-
-        $userMessage = $this->Messages->newEmptyEntity();
-        $this->Messages->patchEntity($userMessage, [
-            'conversation_id' => $conversationId,
-            'role' => 'user',
-            'content' => $messageText
-        ]);
-        $this->Messages->save($userMessage);
-
-        $aiReply = $this->generateAIPrediction($messageText);
-
-        $botMessage = $this->Messages->newEmptyEntity();
-        $this->Messages->patchEntity($botMessage, [
-            'conversation_id' => $conversationId,
-            'role' => 'bot',
-            'content' => $aiReply
-        ]);
-        $this->Messages->save($botMessage);
-
+    if (!$messageText) {
         return $this->response
             ->withType('application/json')
-            ->withStringBody(json_encode([
-                'success' => true,
-                'reply' => $aiReply,
-                'conversation_id' => $conversationId
-            ]));
+            ->withStringBody(json_encode(['success' => false, 'reply' => 'No message provided.']));
     }
+
+    if (!$conversationId) {
+        $conversation = $this->Conversations->newEmptyEntity();
+        $this->Conversations->patchEntity($conversation, [
+            'user_id' => $user->id,
+            'title'   => substr($messageText, 0, 30)
+        ]);
+        $this->Conversations->save($conversation);
+        $conversationId = $conversation->id;
+    }
+
+    // Save user message — using correct column names
+    $userMessage = $this->Messages->newEmptyEntity();
+    $this->Messages->patchEntity($userMessage, [
+        'conversation_id' => $conversationId,
+        'sender'          => 'user',
+        'message'         => $messageText
+    ]);
+    $this->Messages->save($userMessage);
+
+    // Get AI reply
+    $aiReply = $this->generateAIPrediction($messageText);
+
+    // Save bot message — using correct column names
+    $botMessage = $this->Messages->newEmptyEntity();
+    $this->Messages->patchEntity($botMessage, [
+        'conversation_id' => $conversationId,
+        'sender'          => 'bot',
+        'message'         => $aiReply
+    ]);
+    $this->Messages->save($botMessage);
+
+    return $this->response
+        ->withType('application/json')
+        ->withStringBody(json_encode([
+            'success'         => true,
+            'reply'           => $aiReply,
+            'conversation_id' => $conversationId
+        ]));
+}
 
  protected function generateAIPrediction($text)
 {
