@@ -1,0 +1,6 @@
+config/.env
+config/app_local.php
+vendor/
+tmp/
+logs/
+*.log
